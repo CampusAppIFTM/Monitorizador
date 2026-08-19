@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "509773524873",
+    "project_id": "tem-que-ver-isso-ai",
+    "storage_bucket": "tem-que-ver-isso-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509773524873:android:ac9ff94226ae0c425e3b58",
+        "android_client_info": {
+          "package_name": "br.edu.iftm.muryel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "509773524873-1vpmcm5p7kl04m1p929t6ajmm4bbcjpt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjKjWXBfCO4oJ2qTYG3BY_4Vjh1qT6SMU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "509773524873-1vpmcm5p7kl04m1p929t6ajmm4bbcjpt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
