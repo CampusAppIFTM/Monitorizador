@@ -62,7 +62,31 @@ export function configurarGoogleSignin() {
  * @returns {() => void} função que cancela a observação (usar no cleanup do useEffect)
  */
 export function observarUsuario(callback) {
-  return onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(auth, (usuario) => {
+    if (!usuario) {
+      callback(null);
+      return;
+    }
+
+    if (!emailInstitucionalValido(usuario.email)) {
+      callback(null);
+      void sair().catch((erro) => {
+        console.log("Falha ao encerrar sessão não autorizada:", erro);
+      });
+      return;
+    }
+
+    callback(usuario);
+  });
+}
+
+export function emailInstitucionalValido(email) {
+  const emailNormalizado = email?.trim().toLowerCase();
+  return (
+    typeof emailNormalizado === "string" &&
+    (emailNormalizado.endsWith("@estudante.iftm.edu.br") ||
+      emailNormalizado.endsWith("@iftm.edu.br"))
+  );
 }
 
 /**
@@ -91,6 +115,16 @@ export async function entrarComGoogle() {
   }
 
   const idToken = resposta.data?.idToken;
+  const email = resposta.data?.user?.email;
+
+  if (!emailInstitucionalValido(email)) {
+    await GoogleSignin.signOut();
+    const erro = new Error(
+      "Use uma conta institucional com domínio @estudante.iftm.edu.br ou @iftm.edu.br."
+    );
+    erro.code = "auth/unauthorized-domain";
+    throw erro;
+  }
 
   if (!idToken) {
     // Quase sempre significa webClientId ausente ou incorreto.
@@ -125,6 +159,8 @@ export async function sair() {
  */
 export function descreverErro(erro) {
   switch (erro?.code) {
+    case "auth/unauthorized-domain":
+      return erro.message;
     case statusCodes.IN_PROGRESS:
       return "Já existe um login em andamento. Aguarde.";
     case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:

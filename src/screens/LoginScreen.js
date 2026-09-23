@@ -12,7 +12,7 @@
  * ---------------------------------------------------------------------------
  */
 import { useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Text, ActivityIndicator, StyleSheet, SafeAreaView } from "react-native";
 import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 
 import { entrarComGoogle, descreverErro } from "../services/autenticacao";
@@ -41,9 +41,12 @@ const LoginScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Minha Agenda</Text>
-      <Text style={styles.subtitulo}>Entre para continuar</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.brandMark}>
+        <Text style={styles.brandMarkText}>M</Text>
+      </View>
+      <Text style={styles.titulo}>Monitorizador</Text>
+      <Text style={styles.subtitulo}>Acompanhe suas monitorias no IFTM</Text>
 
       {/*
         GoogleSigninButton é o botão oficial. Além de pronto, ele atende às
@@ -58,12 +61,17 @@ const LoginScreen = () => {
         disabled={carregando}
       />
 
+      <Text style={styles.dominios}>
+        Entre com seu e-mail institucional{"\n"}
+        @estudante.iftm.edu.br ou @iftm.edu.br
+      </Text>
+
       {/* Área reservada com altura fixa: evita a tela "pular" ao aparecer. */}
       <View style={styles.areaAviso}>
         {carregando && <ActivityIndicator />}
         {erro && <Text style={styles.erro}>{erro}</Text>}
-      </View>
-    </View>
+        </View>
+      </SafeAreaView>
   );
 };
 
@@ -74,29 +82,58 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
-    padding: 24,
+    backgroundColor: "#f5f8f6",
+    padding: 28,
+  },
+  brandMark: {
+    width: 76,
+    height: 76,
+    borderRadius: 24,
+    backgroundColor: "#0d6b45",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 22,
+    shadowColor: "#0d6b45",
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
+  },
+  brandMarkText: {
+    color: "#fff",
+    fontSize: 42,
+    fontWeight: "800",
   },
   titulo: {
     fontSize: 32,
-    fontWeight: "bold",
+    fontWeight: "800",
+    color: "#12352a",
     marginBottom: 8,
   },
   subtitulo: {
     fontSize: 16,
-    color: "#666",
-    marginBottom: 32,
+    color: "#587068",
+    marginBottom: 30,
+    textAlign: "center",
   },
   botaoGoogle: {
     width: 240,
     height: 48,
   },
   areaAviso: {
-    height: 48,
+    height: 58,
     justifyContent: "center",
   },
   erro: {
     color: "#c62828",
     textAlign: "center",
+    marginTop: 8,
+  },
+  dominios: {
+    color: "#789087",
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "center",
+    marginTop: 10,
   },
 });
