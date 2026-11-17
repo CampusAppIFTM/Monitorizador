@@ -9,7 +9,27 @@ service cloud.firestore {
           request.auth.token.email.matches('.*@estudante[.]iftm[.]edu[.]br$')
           || request.auth.token.email.matches('.*@iftm[.]edu[.]br$')
         );
-      allow write: if false;
+      allow create: if request.auth != null
+        && request.auth.token.email is string
+        && (
+          request.auth.token.email.matches('.*@estudante[.]iftm[.]edu[.]br$')
+          || request.auth.token.email.matches('.*@iftm[.]edu[.]br$')
+        )
+        && request.resource.data.keys().hasAll([
+          'nome', 'dia', 'horario', 'sala', 'monitor', 'area', 'ordem'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'nome', 'dia', 'horario', 'sala', 'monitor', 'area', 'ordem'
+        ])
+        && request.resource.data.nome is string
+        && request.resource.data.dia is string
+        && request.resource.data.horario is string
+        && request.resource.data.sala is string
+        && request.resource.data.monitor is string
+        && request.resource.data.area is string
+        && request.resource.data.ordem is number
+        && request.resource.data.ordem > 0;
+      allow update, delete: if false;
     }
   }
 }

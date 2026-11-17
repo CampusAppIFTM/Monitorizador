@@ -1,4 +1,10 @@
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
 
 import { db } from "../../firebaseConfig";
 
@@ -33,4 +39,8 @@ export function observarMonitorias(aoAtualizar, aoFalhar) {
     },
     aoFalhar
   );
+}
+
+export function adicionarMonitoria(monitoria) {
+  return addDoc(collection(db, "monitorias"), monitoria);
 }
