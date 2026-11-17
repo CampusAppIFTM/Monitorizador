@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /monitorias/{monitoriaId} {
+      allow read: if request.auth != null
+        && request.auth.token.email is string
+        && (
+          request.auth.token.email.matches('.*@estudante[.]iftm[.]edu[.]br$')
+          || request.auth.token.email.matches('.*@iftm[.]edu[.]br$')
+        );
+      allow write: if false;
+    }
+  }
+}

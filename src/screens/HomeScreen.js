@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -11,12 +11,9 @@ import {
 } from "react-native";
 
 import { sair } from "../services/autenticacao";
+import { observarMonitorias } from "../services/monitorias";
 
-const monitorias = [
-  { nome: "Cálculo I", dia: "Quarta-feira", horario: "19:40", sala: "B205", cor: "#e2f0e8" },
-  { nome: "Álgebra Linear", dia: "Terça-feira", horario: "19:40", sala: "B287", cor: "#f7ead5" },
-  { nome: "Geometria Analítica", dia: "Sexta-feira", horario: "19:40", sala: "B205", cor: "#e5e7f8" },
-];
+const coresMaterias = ["#e2f0e8", "#f7ead5", "#e5e7f8", "#dceefa", "#f4e3eb", "#e9efd9"];
 
 const abas = [
   { id: "inicio", label: "Início", icon: "⌂" },
@@ -35,7 +32,25 @@ const saudacao = () => {
 const HomeScreen = ({ usuario }) => {
   const [abaAtiva, setAbaAtiva] = useState("inicio");
   const [saindo, setSaindo] = useState(false);
+  const [monitorias, setMonitorias] = useState([]);
+  const [carregandoMonitorias, setCarregandoMonitorias] = useState(true);
+  const [erroMonitorias, setErroMonitorias] = useState(false);
   const primeiroNome = usuario.displayName?.trim().split(" ")[0] ?? "estudante";
+
+  useEffect(() => {
+    return observarMonitorias(
+      (itens) => {
+        setMonitorias(itens);
+        setCarregandoMonitorias(false);
+        setErroMonitorias(false);
+      },
+      (erro) => {
+        console.log("Falha ao carregar monitorias do Firestore:", erro);
+        setErroMonitorias(true);
+        setCarregandoMonitorias(false);
+      }
+    );
+  }, []);
 
   const aoSair = async () => {
     setSaindo(true);
@@ -72,7 +87,13 @@ const HomeScreen = ({ usuario }) => {
     }
 
     if (abaAtiva === "monitorias") {
-      return <Monitorias />;
+      return (
+        <Monitorias
+          itens={monitorias}
+          carregando={carregandoMonitorias}
+          erro={erroMonitorias}
+        />
+      );
     }
 
     return (
@@ -80,30 +101,45 @@ const HomeScreen = ({ usuario }) => {
         <View style={styles.greetingRow}>
           <View>
             <Text style={styles.greeting}>{saudacao()}, {primeiroNome}!</Text>
-            <Text style={styles.muted}>Confira sua próxima monitoria</Text>
+            <Text style={styles.muted}>Confira suas monitorias disponíveis</Text>
           </View>
           <Avatar usuario={usuario} />
         </View>
 
-        <View style={styles.nextCard}>
-          <View style={styles.nextCardTop}>
-            <Text style={styles.nextLabel}>PRÓXIMA MONITORIA</Text>
-            <Text style={styles.nextBadge}>Hoje</Text>
+        {carregandoMonitorias ? (
+          <View style={styles.statusCard}>
+            <ActivityIndicator color="#0d6b45" />
+            <Text style={styles.statusText}>Carregando monitorias...</Text>
           </View>
-          <Text style={styles.nextTitle}>Monitor de Matemática</Text>
-          <View style={styles.nextDetails}>
-            <Text style={styles.detail}>◷  Terça-feira, 19:40</Text>
-            <Text style={styles.detail}>⌖  Sala B205</Text>
-          </View>
-        </View>
+        ) : erroMonitorias ? (
+          <StatusVazio mensagem="Não foi possível carregar as monitorias. Verifique a conexão e as regras do Firestore." />
+        ) : monitorias.length === 0 ? (
+          <StatusVazio mensagem="Ainda não há monitorias cadastradas." />
+        ) : (
+          <>
+            <View style={styles.nextCard}>
+              <View style={styles.nextCardTop}>
+                <Text style={styles.nextLabel}>MONITORIA EM DESTAQUE</Text>
+                <Text style={styles.nextBadge}>Destaque</Text>
+              </View>
+              <Text style={styles.nextTitle}>{monitorias[0].nome}</Text>
+              <View style={styles.nextDetails}>
+                <Text style={styles.detail}>◷  {monitorias[0].dia}, {monitorias[0].horario}</Text>
+                <Text style={styles.detail}>⌖  Sala {monitorias[0].sala}</Text>
+              </View>
+            </View>
 
-        <View style={styles.sectionHeading}>
-          <Text style={styles.sectionTitle}>Suas monitorias</Text>
-          <Pressable onPress={() => setAbaAtiva("monitorias")}>
-            <Text style={styles.seeAll}>Ver todas</Text>
-          </Pressable>
-        </View>
-        {monitorias.slice(0, 2).map((item) => <MonitoriaRow key={item.nome} item={item} />)}
+            <View style={styles.sectionHeading}>
+              <Text style={styles.sectionTitle}>Suas monitorias</Text>
+              <Pressable onPress={() => setAbaAtiva("monitorias")}>
+                <Text style={styles.seeAll}>Ver todas</Text>
+              </Pressable>
+            </View>
+            {monitorias.slice(0, 2).map((item, index) => (
+              <MonitoriaRow key={item.id} item={item} index={index} />
+            ))}
+          </>
+        )}
       </>
     );
   };
@@ -140,23 +176,42 @@ const Avatar = ({ usuario, grande = false }) => (
   )
 );
 
-const Monitorias = () => (
+const Monitorias = ({ itens, carregando, erro }) => (
   <>
     <Text style={styles.pageTitle}>Monitorias</Text>
     <Text style={styles.muted}>Suas monitorias disponíveis</Text>
-    <View style={styles.list}>{monitorias.map((item) => <MonitoriaRow key={item.nome} item={item} />)}</View>
+    {carregando ? (
+      <View style={styles.statusCard}>
+        <ActivityIndicator color="#0d6b45" />
+        <Text style={styles.statusText}>Carregando monitorias...</Text>
+      </View>
+    ) : erro ? (
+      <StatusVazio mensagem="Não foi possível carregar as monitorias. Verifique a conexão e as regras do Firestore." />
+    ) : itens.length === 0 ? (
+      <StatusVazio mensagem="Ainda não há monitorias cadastradas." />
+    ) : (
+      <View style={styles.list}>
+        {itens.map((item, index) => <MonitoriaRow key={item.id} item={item} index={index} />)}
+      </View>
+    )}
   </>
 );
 
-const MonitoriaRow = ({ item }) => (
+const StatusVazio = ({ mensagem }) => (
+  <View style={styles.statusCard}>
+    <Text style={styles.statusText}>{mensagem}</Text>
+  </View>
+);
+
+const MonitoriaRow = ({ item, index }) => (
   <View style={styles.monitoriaRow}>
-    <View style={[styles.subjectIcon, { backgroundColor: item.cor }]}>
+    <View style={[styles.subjectIcon, { backgroundColor: coresMaterias[index % coresMaterias.length] }]}>
       <Text style={styles.subjectIconText}>{item.nome.charAt(0)}</Text>
     </View>
     <View style={styles.monitoriaInfo}>
       <Text style={styles.monitoriaName}>{item.nome}</Text>
       <Text style={styles.monitoriaMeta}>{item.dia} · {item.horario} · Sala {item.sala}</Text>
-      <Text style={styles.monitoriaMonitor}>Monitor: Rogerio (Matemática)</Text>
+      <Text style={styles.monitoriaMonitor}>Monitor: {item.monitor} ({item.area})</Text>
     </View>
   </View>
 );
@@ -208,4 +263,6 @@ const styles = StyleSheet.create({
   emptyIcon: { color: "#0d6b45", fontSize: 48, marginBottom: 16 },
   emptyTitle: { color: "#12352a", fontSize: 21, fontWeight: "800", marginBottom: 8 },
   emptyText: { color: "#789087", textAlign: "center", fontSize: 14 },
+  statusCard: { alignItems: "center", justifyContent: "center", backgroundColor: "#fff", borderRadius: 18, borderWidth: 1, borderColor: "#edf2ee", padding: 22, marginTop: 24 },
+  statusText: { color: "#789087", fontSize: 13, textAlign: "center", lineHeight: 20 },
 });
